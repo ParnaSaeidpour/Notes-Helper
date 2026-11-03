@@ -1,0 +1,12 @@
+{
+  "name": "notes-helper-marketplace",
+  "description": "Marketplace for the Notes Helper plugin.",
+  "owner": { "name": "Parna Saeidpour" },
+  "plugins": [
+    {
+      "name": "notes-helper",
+      "source": "./notes-plugin",
+      "description": "Notes MCP server plus the note-style skill."
+    }
+  ]
+}

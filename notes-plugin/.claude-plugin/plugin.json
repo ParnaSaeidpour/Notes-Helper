@@ -1,0 +1,9 @@
+{
+  "name": "notes-helper",
+  "displayName": "Notes Helper",
+  "version": "0.1.0",
+  "description": "A tiny notes MCP server (add_note, list_notes) plus a note-style skill that formats every note as 'YYYY-MM-DD [category] text'.",
+  "author": { "name": "Parna Saeidpour" },
+  "license": "MIT",
+  "keywords": ["notes", "mcp", "example"]
+}

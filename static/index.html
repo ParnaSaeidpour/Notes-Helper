@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes Helper</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#6b7280; --line:#e5e7eb; --accent:#2f6fed; --accent-ink:#fff; --chip:#eef2ff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1218; --card:#171b24; --ink:#e7eaf0; --muted:#9aa3b2; --line:#2a3040; --accent:#5b8cff; --chip:#232a3d; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width:720px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  form { display:grid; grid-template-columns:1fr 140px auto; gap:8px; }
+  @media (max-width:560px) { form { grid-template-columns:1fr; } }
+  input, select, button { font:inherit; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); }
+  button { cursor:pointer; }
+  button.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button:disabled { opacity:.55; cursor:default; }
+  .hint { color:var(--muted); font-size:13px; margin:8px 0 0; }
+  ul { list-style:none; margin:0; padding:0; }
+  li { display:flex; gap:10px; align-items:center; padding:10px 0; border-top:1px solid var(--line); }
+  li:first-child { border-top:0; }
+  .chip { background:var(--chip); color:var(--accent); font-size:12px; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  .date { color:var(--muted); font-size:13px; white-space:nowrap; }
+  .text { flex:1; }
+  .del { background:none; border:none; color:var(--muted); padding:4px 8px; }
+  .del:hover { color:#d33; }
+  .row { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+  h2 { font-size:16px; margin:0; }
+  #summary { white-space:pre-wrap; min-height:48px; color:var(--ink); }
+  #summary.muted { color:var(--muted); }
+  .empty { color:var(--muted); padding:8px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Notes Helper</h1>
+  <p class="sub">Notes are stored in <code>notes.json</code>, the same file the MCP server uses. Summaries come from the Claude Agent SDK.</p>
+
+  <div class="card">
+    <form id="add">
+      <input id="text" placeholder="What do you want to remember?" autocomplete="off" required>
+      <select id="category">
+        <option value="personal">personal</option>
+        <option value="work">work</option>
+        <option value="shopping">shopping</option>
+        <option value="idea">idea</option>
+      </select>
+      <button class="primary" type="submit">Add note</button>
+    </form>
+    <p class="hint">Saved as <code>YYYY-MM-DD [category] text</code>, cut to 20 words, following the note-style skill.</p>
+  </div>
+
+  <div class="card">
+    <div class="row"><h2>Your notes</h2><span id="count" class="date"></span></div>
+    <ul id="notes"></ul>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <h2>Summary by category</h2>
+      <button id="sum" type="button">Summarize with Claude</button>
+    </div>
+    <div id="summary" class="muted">Click the button to ask Claude to summarize your notes.</div>
+    <p id="cost" class="hint"></p>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+
+async function load() {
+  const notes = await (await fetch('/api/notes')).json();
+  $('#count').textContent = notes.length ? `${notes.length} note${notes.length === 1 ? '' : 's'}` : '';
+  const ul = $('#notes'); ul.innerHTML = '';
+  if (!notes.length) { ul.innerHTML = '<li class="empty">No notes yet. Add one above.</li>'; return; }
+  notes.forEach((n, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="chip"></span><span class="text"></span><span class="date"></span><button class="del" title="Delete">✕</button>`;
+    li.querySelector('.chip').textContent = n.category;
+    li.querySelector('.text').textContent = n.text;
+    li.querySelector('.date').textContent = n.date;
+    li.querySelector('.del').onclick = async () => {
+      await fetch('/api/notes/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ index: i }) });
+      load();
+    };
+    ul.appendChild(li);
+  });
+}
+
+$('#add').onsubmit = async e => {
+  e.preventDefault();
+  const text = $('#text').value.trim(); if (!text) return;
+  await fetch('/api/notes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text, category: $('#category').value }) });
+  $('#text').value = ''; load();
+};
+
+$('#sum').onclick = async () => {
+  const btn = $('#sum'), out = $('#summary');
+  btn.disabled = true; btn.textContent = 'Thinking…'; out.className = 'muted'; out.textContent = 'Claude is reading your notes…'; $('#cost').textContent = '';
+  try {
+    const r = await fetch('/api/summarize', { method:'POST' });
+    const d = await r.json();
+    out.className = ''; out.textContent = d.summary || d.error;
+    $('#cost').textContent = d.cost ? `This summary cost: ${d.cost}` : '';
+  } catch (err) { out.textContent = 'Error: ' + err; }
+  btn.disabled = false; btn.textContent = 'Summarize with Claude';
+};
+
+load();
+</script>
+</body>
+</html>

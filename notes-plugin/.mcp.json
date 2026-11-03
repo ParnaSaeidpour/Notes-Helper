@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "notes": {
+      "command": "sh",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/run-server.sh"],
+      "env": {
+        "NOTES_FILE": "${CLAUDE_PLUGIN_DATA}/notes.json"
+      }
+    }
+  }
+}
