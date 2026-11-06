@@ -12,7 +12,7 @@ automatically into a private virtualenv the first time the server starts.
 ## Install
 
 ```
-claude plugin marketplace add <path-or-git-url-of-this-repo>
+claude plugin marketplace add ParnaSaeidpour/Notes-Helper
 claude plugin install notes-helper@notes-helper-marketplace
 ```
 
