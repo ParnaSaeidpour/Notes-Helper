@@ -42,6 +42,8 @@ page shows the same notes outside Claude Code.
 
 ## Try it
 
+You need Python 3.10 or newer and [Claude Code](https://code.claude.com) installed and logged in.
+
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt

@@ -2,10 +2,8 @@
   "mcpServers": {
     "notes": {
       "type": "stdio",
-      "command": "/Volumes/Development/Repositories/Notes-Helper/.venv/bin/python",
-      "args": [
-        "/Volumes/Development/Repositories/Notes-Helper/server.py"
-      ],
+      "command": ".venv/bin/python",
+      "args": ["server.py"],
       "env": {}
     }
   }
